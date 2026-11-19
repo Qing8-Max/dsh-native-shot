@@ -1,0 +1,60 @@
+﻿{
+    "name":  "dsh-native-shot",
+    "version":  "1.1.0",
+    "private":  false,
+    "type":  "module",
+    "description":  "WeChat-style screenshot button for the DSH composer (Windows): region capture with window-edge snapping plus a brush/crop editor. No files left on disk.",
+    "keywords":  [
+                     "dsh",
+                     "dsh-plugin",
+                     "deepseek-harness",
+                     "screenshot",
+                     "screen-capture",
+                     "annotation",
+                     "windows",
+                     "composer"
+                 ],
+    "license":  "MIT",
+    "author":  "qingfengshangnanzhi",
+    "os":  [
+               "win32"
+           ],
+    "cpu":  [
+                "x64"
+            ],
+    "main":  "index.js",
+    "exports":  {
+                    ".":  "./index.js",
+                    "./client":  "./client.js"
+                },
+    "files":  [
+                  "index.js",
+                  "client.js",
+                  "cordis.patch.yml",
+                  "README.md",
+                  "LICENSE"
+              ],
+    "dsh":  {
+                "bundle":  {
+                               "patch":  "./cordis.patch.yml"
+                           },
+                "client":  {
+                               "platform":  "web",
+                               "immediately":  true,
+                               "inject":  [
+                                              "@deepseek-ai/dsh-client-ui-conversation"
+                                          ]
+                           },
+                "engines":  {
+                                "dsh":  "\u003e=0.2.2-rc.1 \u003c0.3.0-0"
+                            }
+            },
+    "repository":  {
+                       "type":  "git",
+                       "url":  "git+https://github.com/Qing8-Max/dsh-native-shot.git"
+                   },
+    "homepage":  "https://github.com/Qing8-Max/dsh-native-shot#readme",
+    "bugs":  {
+                 "url":  "https://github.com/Qing8-Max/dsh-native-shot/issues"
+             }
+}
