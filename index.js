@@ -95,10 +95,39 @@ async function listWindows() {
 export function apply(ctx) {
   ctx.inject(['webServer'], (c) => {
     c.effect(() => {
+      /**
+       * 宿主认证：截图和窗口列表都会暴露屏幕内容，必须和 DSH 自己的 API 用同一道闸。
+       * `connection.requestRejection` 同时做 Host/Origin 检查与浏览器登录校验：
+       * 没有登录凭据、或来自别的站点，都拿不到 401/403 以外的结果。
+       * 拿不到这道闸（没有 connection 服务）时按失败关闭处理，不做"看来源地址"之类的猜测。
+       * @returns true 表示已经拒绝并写完响应，调用方直接 return。
+       */
+      const rejectedByHost = (req, res) => {
+        const deny = (status, error) => {
+          res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+          res.end(JSON.stringify({ error }));
+        };
+        let rejection;
+        try {
+          const connection = c.get('connection');
+          if (typeof connection?.requestRejection !== 'function') throw new Error('admission unavailable');
+          rejection = connection.requestRejection(req);
+        } catch {
+          deny(503, 'host admission unavailable');
+          return true;
+        }
+        if (rejection !== undefined) {
+          deny(rejection === 401 ? 401 : 403, 'unauthenticated');
+          return true;
+        }
+        return false;
+      };
+
       const disposeCapture = c.webServer.register({
         kind: 'exact',
         path: '/dsh-native-shot/capture',
         handler: async (req, res) => {
+          if (rejectedByHost(req, res)) return;
           try {
             const buf = await captureScreen();
             res.writeHead(200, {
@@ -119,6 +148,7 @@ export function apply(ctx) {
         kind: 'exact',
         path: '/dsh-native-shot/windows',
         handler: async (req, res) => {
+          if (rejectedByHost(req, res)) return;
           const list = await listWindows();
           res.writeHead(200, {
             'content-type': 'application/json; charset=utf-8',
